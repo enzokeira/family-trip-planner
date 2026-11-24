@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family Trip Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one narrow phone column. Sticky day tabs, then stop cards with a big tick on the left. */
+:root{
+  --bg:#edf4f5; --card:#ffffff; --ink:#1b2a33; --muted:#4f626c; --line:#d3e1e5;
+  --accent:#0f7c8a; --accent-ink:#ffffff; --sun:#f2a516; --good:#2b8a57; --soft:#e2f0f2;
+  --t-out-bg:#dcf2e2; --t-out-ink:#1d6636;
+  --t-in-bg:#dce8fb; --t-in-ink:#214a94;
+  --t-food-bg:#fde2d9; --t-food-ink:#9c3f1c;
+  --t-rest-bg:#e9e1f9; --t-rest-ink:#553594;
+  --t-trav-bg:#e4e8eb; --t-trav-ink:#384852;
+  --warn-bg:#fff2d6; --warn-ink:#6d4a00;
+  --f-display:"Fredoka","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1b20; --card:#18262d; --ink:#e8f1f4; --muted:#9fb4bd; --line:#2b3d46;
+    --accent:#4fc3d1; --accent-ink:#06242a; --sun:#f5b73c; --good:#58c58a; --soft:#1e3640;
+    --t-out-bg:#1d3a28; --t-out-ink:#9fe0b2;
+    --t-in-bg:#1e3052; --t-in-ink:#a9c6f5;
+    --t-food-bg:#47281d; --t-food-ink:#f5b9a2;
+    --t-rest-bg:#33274f; --t-rest-ink:#cdbcf2;
+    --t-trav-bg:#2a3840; --t-trav-ink:#bccbd2;
+    --warn-bg:#3d3114; --warn-ink:#f3d58e;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1b20; --card:#18262d; --ink:#e8f1f4; --muted:#9fb4bd; --line:#2b3d46;
+  --accent:#4fc3d1; --accent-ink:#06242a; --sun:#f5b73c; --good:#58c58a; --soft:#1e3640;
+  --t-out-bg:#1d3a28; --t-out-ink:#9fe0b2;
+  --t-in-bg:#1e3052; --t-in-ink:#a9c6f5;
+  --t-food-bg:#47281d; --t-food-ink:#f5b9a2;
+  --t-rest-bg:#33274f; --t-rest-ink:#cdbcf2;
+  --t-trav-bg:#2a3840; --t-trav-ink:#bccbd2;
+  --warn-bg:#3d3114; --warn-ink:#f3d58e;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 64px}
+header.top{padding:24px 0 12px}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(1.7rem,6vw,2.3rem);line-height:1.15;margin:0 0 6px;text-wrap:balance}
+.sub{margin:0;color:var(--muted)}
+.overall{margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.overall-row{display:flex;justify-content:space-between;gap:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:12px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .35s ease}
+.stars-line{margin:8px 0 0;color:var(--muted);font-size:.95rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+.views{display:flex;gap:6px;margin:16px 0 0;background:var(--soft);padding:5px;border-radius:14px}
+.views button{flex:1;min-height:48px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:700 1rem var(--f-body);cursor:pointer}
+.views button[aria-selected="true"]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+button:focus-visible,input:focus-visible+.box,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tabs-wrap{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px;margin-top:6px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.tab{flex:0 0 auto;scroll-snap-align:start;min-width:84px;min-height:56px;padding:6px 12px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);cursor:pointer;font:700 .95rem/1.2 var(--f-body);text-align:center}
+.tab small{display:block;font-weight:600;color:var(--muted);font-size:.78rem}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.tab[aria-selected="true"] small{color:var(--accent-ink);opacity:.9}
+.tab.done::after{content:"Done";display:block;font-size:.72rem;font-weight:800;color:var(--good)}
+.tab.done[aria-selected="true"]::after{color:var(--accent-ink)}
+.day-head{margin:14px 0 12px}
+.day-head .city{margin:0;color:var(--accent);font-weight:800;font-size:.9rem;letter-spacing:.02em;text-transform:uppercase}
+.day-head h2{font-family:var(--f-display);font-weight:600;font-size:1.65rem;margin:2px 0 6px;line-height:1.2;text-wrap:balance}
+.day-head p{margin:0 0 8px;color:var(--muted)}
+.day-count{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums}
+.day-done{display:none;margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--good);color:#fff;font-weight:800}
+.day-done.show{display:block}
+.note{background:var(--warn-bg);color:var(--warn-ink);border-radius:14px;padding:12px 14px;margin:0 0 14px;font-size:.95rem}
+.note strong{font-weight:800}
+.stop{background:var(--card);border:1px solid var(--line);border-radius:18px;margin:0 0 12px;padding:12px 14px}
+.stop.is-done{border-color:var(--good)}
+.stop-head{display:flex;gap:12px;align-items:flex-start}
+.tick{position:relative;flex:0 0 auto;width:48px;height:48px;display:block;cursor:pointer}
+.tick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+.tick .box{position:absolute;inset:4px;border:3px solid var(--accent);border-radius:12px;background:var(--card);display:grid;place-items:center;transition:background .15s}
+.tick input:checked+.box{background:var(--good);border-color:var(--good)}
+.tick input:checked+.box::after{content:"";width:12px;height:22px;border:solid #fff;border-width:0 5px 5px 0;transform:rotate(45deg) translate(-2px,-2px)}
+.stop-main{flex:1;min-width:0;text-align:left;background:none;border:0;padding:2px 0;margin:0;color:inherit;font:inherit;cursor:pointer;min-height:48px}
+.time{display:block;font-weight:800;font-size:.85rem;color:var(--accent);font-variant-numeric:tabular-nums}
+.stop-title{display:block;font-family:var(--f-display);font-weight:500;font-size:1.2rem;line-height:1.25;margin:1px 0 6px}
+.stop.is-done .stop-title{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:var(--good)}
+.chev{float:right;margin-left:8px;color:var(--muted);font-size:.85rem;font-weight:700}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag,.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.78rem;font-weight:800;line-height:1.6}
+.t-Outdoor{background:var(--t-out-bg);color:var(--t-out-ink)}
+.t-Indoor{background:var(--t-in-bg);color:var(--t-in-ink)}
+.t-Food{background:var(--t-food-bg);color:var(--t-food-ink)}
+.t-Rest{background:var(--t-rest-bg);color:var(--t-rest-ink)}
+.t-Travel{background:var(--t-trav-bg);color:var(--t-trav-ink)}
+.chip{border:1.5px solid var(--line);color:var(--muted);background:transparent}
+.chip.adapted,.chip.swapped,.chip.added{border-color:var(--sun);color:var(--ink)}
+.what{margin:10px 0 0 60px;font-size:.98rem}
+.panel{margin:12px 0 0 60px;display:grid;gap:10px}
+.panel[hidden]{display:none}
+.blk h4{margin:0 0 2px;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.blk p,.blk ul{margin:0;font-size:.97rem}
+.blk ul{padding-left:20px}
+.mission{background:var(--soft);border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+.star{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:2.5px solid var(--sun);background:transparent;color:var(--sun);cursor:pointer;font-size:1.4rem;line-height:1;display:grid;place-items:center}
+.star[aria-pressed="true"]{background:var(--sun);color:#3d2a00}
+.mission h4{margin:0 0 2px;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.mission p{margin:0;font-size:.97rem}
+.verify{border-left:4px solid var(--sun);padding-left:10px}
+.bingo{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.bingo button{min-height:52px;padding:6px 8px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 .92rem/1.2 var(--f-body);cursor:pointer;text-align:left}
+.bingo button[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
+.bingo-msg{margin:6px 0 0;font-weight:800;color:var(--good);min-height:1.4em}
+.day-backup{background:var(--card);border:2px dashed var(--line);border-radius:18px;padding:12px 14px;margin:16px 0 0}
+.day-backup h3{margin:0 0 4px;font-family:var(--f-display);font-weight:500;font-size:1.1rem}
+.day-backup p{margin:0;font-size:.97rem}
+.list-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:6px 14px;margin:14px 0}
+.list-card h2{font-family:var(--f-display);font-weight:600;font-size:1.35rem;margin:10px 0 2px}
+.list-card .lead{margin:0 0 6px;color:var(--muted);font-size:.95rem}
+.li{display:flex;gap:12px;align-items:center;min-height:52px;padding:4px 0;border-top:1px solid var(--line)}
+.li:first-of-type{border-top:0}
+.li span.txt{flex:1}
+.li input:checked ~ span.txt{color:var(--muted);text-decoration:line-through}
+.sources{margin:24px 0 0;font-size:.9rem;color:var(--muted)}
+.sources h2{font-family:var(--f-display);font-weight:500;font-size:1.1rem;color:var(--ink);margin:0 0 6px}
+.sources ul{padding-left:18px;margin:0}
+.sources a{color:var(--accent)}
+.reset{margin:20px 0 0;min-height:48px;padding:0 18px;border:2px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);font:700 .95rem var(--f-body);cursor:pointer}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.confetti i{position:absolute;top:-16px;width:10px;height:16px;border-radius:2px;animation:fall 1.9s ease-in forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.9}}
+@media (prefers-reduced-motion: reduce){.confetti{display:none}.bar>i{transition:none}}
+@media (max-width:420px){.what,.panel{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Shenzhen and Hong Kong, the family version</h1>
+    <p class="sub">3 to 12 December. Three adults, a 5 year old and a 7 year old. Tick a stop when you have done it. Open a card for tips and the kids' mission.</p>
+    <div class="overall" aria-live="polite">
+      <div class="overall-row"><span>Trip progress</span><span id="overallText">0 of 0 stops</span></div>
+      <div class="bar" role="progressbar" aria-label="Trip progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="overallBar"><i></i></div>
+      <p class="stars-line" id="starsLine"></p>
+    </div>
+    <div class="legend" aria-label="Tag key">
+      <span class="tag t-Outdoor">Outdoor</span><span class="tag t-Indoor">Indoor</span><span class="tag t-Food">Food</span><span class="tag t-Rest">Rest</span><span class="tag t-Travel">Travel</span>
+    </div>
+    <div class="views" role="tablist" aria-label="Sections">
+      <button role="tab" id="v-days" aria-selected="true" data-view="days">Days</button>
+      <button role="tab" id="v-before" aria-selected="false" data-view="before">Before we go</button>
+      <button role="tab" id="v-pack" aria-selected="false" data-view="pack">Packing</button>
+    </div>
+  </header>
+
+  <section id="daysView">
+    <div class="tabs-wrap"><div class="tabs" id="tabs" role="tablist" aria-label="Days"></div></div>
+    <div id="dayBody"></div>
+  </section>
+  <section id="beforeView" hidden></section>
+  <section id="packView" hidden></section>
+
+  <section class="sources" aria-label="Sources">
+    <h2>What was checked</h2>
+    <p>Details marked "Checked" came from these pages. Anything under "Still to check" could not be confirmed, so confirm it before you rely on it.</p>
+    <ul>
+      <li><a href="https://travelchinaguide.com/attraction/guangdong/shenzhen/safari-park.htm">Shenzhen Safari Park, hours, height-based tickets and in-park bus</a></li>
+      <li><a href="https://www.babagoeschina.com/museum-of-science-and-technology-in-shenzhen/">Shenzhen Science and Technology Museum, hours and booking</a></li>
+      <li><a href="https://www.klook.com/activity/171780-shenzhen-huafa-snow-bonski/">Qianhai Snow World, two-hour snow ticket</a></li>
+      <li><a href="https://en.weekendhk.com/?p=1575974">Hong Kong Zoological and Botanical Gardens, hours and free entry</a></li>
+      <li><a href="https://www.oceanpark.com.hk/id/faq">Ocean Park Hong Kong, child ticket (ages 3 to 11)</a></li>
+      <li><a href="https://www.tourism.gov.hk/symphony/english/details/details.html">A Symphony of Lights, nightly at 8pm</a></li>
+      <li><a href="https://www.sz.gov.cn/en_szgov/aboutsz/photos/content/post_12924530.html">Shenzhen Children's Palace, trial reopening</a></li>
+    </ul>
+    <button class="reset" id="resetBtn" type="button">Clear all ticks and stars</button>
+  </section>
+</div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<script>
+var DAYS = [
+{ id:"d1", tab:"3 Dec", sub:"Thu", city:"Singapore to Shenzhen", title:"Fly in and ferry across",
+  intro:"A travel day. The aim is to arrive calm, fed and in bed early.",
+  backup:"If everyone is flat after the ferry, skip Dongmen. Order dinner near the hotel and go to bed.",
+  stops:[
+  { id:"d1a", time:"Early morning", title:"Flight from Changi T4 to Hong Kong", tags:["Travel"], change:"keep",
+    what:"Check in at Changi T4 and fly to Hong Kong, landing about 11:25am.",
+    why:"Window seats, snacks and a real aeroplane.",
+    tip:"Keep snacks, a change of top and wipes in hand luggage. Offer a drink or a sweet on take-off and landing to help little ears.",
+    mission:"Tail-fin spotter: find five different airline logos before you board.", ok:[], check:[] },
+  { id:"d1b", time:"About 1:00pm", title:"SkyPier ferry to Shekou", tags:["Travel"], change:"keep",
+    what:"Ferry leaves about 1:00pm and arrives about 1:40pm. Check-in closes 40 minutes before departure and boarding closes 30 minutes before.",
+    why:"A boat ride is a treat after a flight.",
+    tip:"Flight and ferry are on one itinerary in the same building, so the airline is on the hook if you are delayed. Still keep snacks handy for the immigration queue.",
+    mission:"Ship spotter: find a tugboat, a container ship and a ferry.",
+    backup:"If you miss it, take a later sailing and eat at the airport while you wait.",
+    ok:[], check:[] },
+  { id:"d1c", time:"Afternoon", title:"Taxi to Luohu, hotel check-in, late dim sum lunch", tags:["Travel","Food"], change:"adapted",
+    changeNote:"Lunch will land after 3pm, so a snack on the ferry is built in.",
+    what:"Taxi from Shekou to the hotel in Luohu, check in, then dim sum at Tao Tao Ju.",
+    why:"Dim sum comes in small pieces that children can pick at.",
+    tip:"Give the children a snack on the ferry. Ask for plain steamed rice, congee or noodles as a safe option.",
+    mission:"Dumpling detective: try three different dumplings and vote for a favourite.",
+    ok:[], check:["Taxi time from Shekou to Luohu","Tao Tao Ju opening hours and whether you need to book"] },
+  { id:"d1d", time:"4:30pm", title:"Quiet hour at the hotel", tags:["Rest"], change:"added",
+    what:"Shoes off, water, colouring or a show. Set an alarm for 45 minutes.",
+    why:"Gives both children time to reset before the evening.",
+    tip:"This hour protects the whole evening. Do not skip it.",
+    mission:"Draw the best thing you saw today.", ok:[], check:[] },
+  { id:"d1e", time:"6:00pm", title:"Short stroll on Dongmen Old Street", tags:["Outdoor","Food"], change:"adapted",
+    changeNote:"Cut to about an hour. The immersive art exhibition is now optional.",
+    what:"Walk the street, pick one snack each, and head back for an early night.",
+    why:"Lights, street food and lots of people to watch.",
+    tip:"It gets crowded. Agree a meeting point in case anyone is separated, and keep a hand on each child.",
+    mission:"Snack hunt: each child chooses one snack to share with the family.",
+    backup:"Skip the art exhibition if energy is low.",
+    ok:[], check:["Immersive art exhibition: name, age rules and ticket needs"] }
+  ]},
+
+{ id:"d2", tab:"4 Dec", sub:"Fri", city:"Shenzhen", title:"Snow day",
+  intro:"One big morning activity, then a calm afternoon.",
+  backup:"If snow play is full or the children are tired, spend the day at the mall: ice cream, an indoor play area and an early night.",
+  stops:[
+  { id:"d2a", time:"About 10:00am", title:"Qianhai Ice and Snow World", tags:["Indoor"], change:"keep",
+    what:"A two-hour snow session. A booking site lists the standard 2-hour ticket as including equipment. Expect snow play areas with a luge and bumper cars on ice.",
+    why:"Real snow indoors, sliding and ice bumper cars.",
+    tip:"For a 5 and a 7 year old, choose the snow play ticket over a ski ticket. Buy online first to avoid the ticket queue. Bring spare socks and gloves, and wear leggings under trousers. Allow about 45 minutes in the car from Luohu.",
+    mission:"Snow zoo: build a snow animal in five minutes. The 7 year old picks the animal.",
+    backup:"If the sessions are full, book the next slot and have a hot drink while you wait.",
+    ok:["Two-hour ticket, with equipment listed as included"],
+    check:["Age and height limits for slopes and snow play","Drive time from Luohu","Whether snowsuits are included for children"] },
+  { id:"d2b", time:"12:30pm", title:"MixC lunch, ice cream and bubble tea", tags:["Food","Rest"], change:"keep",
+    changeNote:"Treats come after a proper lunch.",
+    what:"Lunch, then ice cream and bubble tea.",
+    why:"Warm food after the cold and a sweet reward.",
+    tip:"Malls have toilets and quiet corners. Eat first, treats second. Sit for at least 45 minutes: this is the rest slot.",
+    mission:"Taste test: each child scores one new flavour out of five.",
+    ok:[], check:["Distance from Qianhai","Kids' menu or play area at your chosen restaurant"] },
+  { id:"d2c", time:"4:00pm", title:"Water go-karts at OCT Harbour", tags:["Outdoor"], change:"adapted",
+    changeNote:"Moved earlier, while it is still light and warmer. Dinner follows.",
+    what:"Water go-karts, then dinner at OCT Harbour.",
+    why:"Driving a boat is an adventure for a 7 year old.",
+    tip:"Dark falls early in December and it is cold on the water. Bring jackets. Ask whether an adult can ride with each child.",
+    mission:"Captain's log: each child names their boat and picks where it is going.",
+    backup:"If closed or too cold, walk the harbour front and have an early dinner.",
+    ok:[], check:["Age and height limits","Opening hours and price","Whether it runs in December"] }
+  ]},
+
+{ id:"d3", tab:"5 Dec", sub:"Sat", city:"Shenzhen", title:"Old town and gadgets",
+  intro:"Easy walking in the morning, a long lunch, and a short indoor visit.",
+  backup:"If it rains, skip Nantou and spend longer at the store and mall, with an indoor play break.",
+  stops:[
+  { id:"d3a", time:"9:30am", title:"Nantou Ancient City and a coffee stop", tags:["Outdoor","Food"], change:"keep",
+    what:"Wander the old lanes and gates. Coffee for the adults, juice for the children.",
+    why:"Old gates, lanes and courtyards to explore like a treasure map.",
+    tip:"Go early, before it fills up. The lanes are uneven, so wear comfortable shoes.",
+    mission:"Guardian hunt: find three stone lions, two old doors and one red lantern.",
+    ok:[], check:["Opening hours and any entry fee","Toilets near the coffee stop"] },
+  { id:"d3b", time:"12:00pm", title:"Lunch at Yan Tian Xia Banquet", tags:["Food"], change:"keep",
+    what:"A shared lunch.",
+    why:"Big dishes to share. Plenty of choice for a fussy eater.",
+    tip:"Ask for plain rice, steamed egg or soup for the children. Book a table so you do not queue.",
+    mission:"Chopstick challenge: pick up five pieces of food in a row.",
+    ok:[], check:["Whether you need to book","Kids' menu or high chairs"] },
+  { id:"d3c", time:"1:30pm", title:"Quiet time", tags:["Rest"], change:"added",
+    what:"Back to the hotel for an hour, or find a quiet cafe corner.",
+    why:"A reset before the afternoon.",
+    tip:"Choose the hotel if it is close. Otherwise a cafe with a sofa works.",
+    mission:"Colour in or draw a map of the morning's lanes.", ok:[], check:[] },
+  { id:"d3d", time:"3:00pm", title:"Bambu 3D printing store, Shenzhen Bay MixC", tags:["Indoor"], change:"keep",
+    changeNote:"Kept short, about 45 minutes.",
+    what:"Look at the 3D printers and printed models.",
+    why:"Watching machines build things layer by layer.",
+    tip:"Keep it short. Remind the children not to touch display items.",
+    mission:"Design an animal: draw one you would 3D print, and give it a name.",
+    backup:"If it is crowded, visit the mall play area instead.",
+    ok:[], check:["Opening hours","Whether there are demos or workshops"] }
+  ]},
+
+{ id:"d4", tab:"6 Dec", sub:"Sun", city:"Shenzhen", title:"Robot show day",
+  intro:"Keep the morning easy so the 11:00 show is the highlight.",
+  backup:"If the 11:00 show is full, use the 15:00 show and move the rest slot earlier.",
+  stops:[
+  { id:"d4a", time:"10:00am", title:"Explore COCO Park Futian", tags:["Indoor","Food"], change:"keep",
+    what:"A relaxed walk around the park and a snack.",
+    why:"Space to wander and look around.",
+    tip:"Arrive about 20 minutes before the show to find a good spot.",
+    mission:"Find three things in the mall that move by themselves.",
+    ok:[], check:["Where in the park the robot show is held"] },
+  { id:"d4b", time:"11:00am", title:"Robot show", tags:["Indoor"], change:"keep",
+    what:"Your sheet lists shows at 11:00, 15:00, 17:00 and 19:00.",
+    why:"Robots, music and movement.",
+    tip:"The 11:00 show suits a fresh 5 year old best. The 15:00 show is the backup.",
+    mission:"Robot reporter: count how many different moves the robot does.",
+    ok:[], check:["Show times (taken from your sheet)","Whether the show is suitable for a 5 year old"] },
+  { id:"d4c", time:"1:30pm", title:"Afternoon rest", tags:["Rest"], change:"added",
+    what:"Back to the hotel for a nap or quiet play.",
+    why:"Keeps the evening smooth.",
+    tip:"Rest is the main reason this day works.",
+    mission:"Write or draw a postcard for someone at home.", ok:[], check:[] },
+  { id:"d4d", time:"5:30pm", title:"Dinner: Dagefan pigeon and lamb skewers", tags:["Food"], change:"adapted",
+    changeNote:"Eat early, and add one plain option for the children.",
+    what:"Dinner at Dagefan, with Longlong Time Ago lamb skewers as an option.",
+    why:"Skewers are fun to eat.",
+    tip:"Ask for non-spicy skewers and add plain rice or vegetables. Pigeon is an adventurous choice, so let the children try one bite.",
+    mission:"Brave bite: each child tries one new food and scores it out of five.",
+    backup:"If the queue is long, switch to a nearby noodle shop.",
+    ok:[], check:["Whether you can book","Kids' menu or high chairs","Queue times"] }
+  ]},
+
+{ id:"d5", tab:"7 Dec", sub:"Mon", city:"Shenzhen", title:"Safari Park",
+  intro:"The day the 7 year old will remember. Arrive for opening.",
+  backup:"If everyone is tired by 2pm, take the in-park bus to the nearest exit and head to dinner early.",
+  stops:[
+  { id:"d5a", time:"8:15am", title:"Travel to Shenzhen Safari Park", tags:["Travel"], change:"keep",
+    what:"Aim to arrive for the 9:30am opening. Metro line 7 to Xili Lake exit B leads straight to the entrance.",
+    why:"Arriving early means cooler air and fewer people.",
+    tip:"A car or taxi is easier than the metro with three adults and two children. Check journey time before you leave.",
+    mission:"Guess the first animal you will see, then check at the end.",
+    ok:["Metro line 7 to Xili Lake exit B"], check:["Journey time from the Luohu hotel"] },
+  { id:"d5b", time:"9:30am", title:"Walk-through animal park", tags:["Outdoor"], change:"keep",
+    changeNote:"Your tickets are already booked.",
+    what:"Open 9:30am to 6pm, last entry 5pm. Tickets depend on height: free under 1.2m with one free child per adult, and a child price from 1.2m to 1.5m.",
+    why:"Giraffes, elephants, tigers, pandas, zebras and flamingos.",
+    tip:"Take the in-park sightseeing bus (about CNY 20 each, unlimited rides) when little legs tire. Bring passports and check that the ticket type matches each child's height. Benches, shade and toilets are plentiful.",
+    mission:"Animal bingo: tick each animal you spot. Four or more earns a ranger badge.",
+    bingo:["Giraffe","Elephant","Tiger","Panda","Zebra","Flamingo","Something with stripes","Something with a long neck"],
+    backup:"If it rains, buy disposable raincoats at the park (listed at CNY 10) and keep going.",
+    ok:["Hours and last entry","Height-based ticket rules","In-park bus price"],
+    check:["Animal show times on the day","Which ticket type each child needs"] },
+  { id:"d5c", time:"12:30pm", title:"Picnic or lunch, then shade break", tags:["Food","Rest"], change:"added",
+    what:"Eat in the park and rest for 30 minutes in the shade.",
+    why:"A reset before the afternoon animals.",
+    tip:"Bring snacks and water. A seat in the shade is a good time for the animal bingo.",
+    mission:"Fill in any missing bingo squares.", ok:[], check:["Food options inside the park"] },
+  { id:"d5d", time:"6:00pm", title:"Dinner at Dongmen BBQ beef and eel", tags:["Food"], change:"adapted",
+    changeNote:"Early dinner, with plain options added.",
+    what:"BBQ beef and eel at Dongmen.",
+    why:"Grilled food is easy to share.",
+    tip:"Order beef for the children and add plain rice. Eel is an adventurous option, so let them try one bite.",
+    mission:"Day review: each person names their favourite animal.",
+    ok:[], check:["Kids' menu or high chairs","Booking and queue times"] }
+  ]},
+
+{ id:"d6", tab:"8 Dec", sub:"Tue", city:"Shenzhen", title:"Science museum",
+  intro:"The longest drive of the trip, about an hour each way, so plan snacks and games.",
+  backup:"If the museum is closed or sold out, try the Shenzhen Children's Palace. It began trial operation on 1 August 2026 with free real-name booking through its WeChat mini programme.",
+  stops:[
+  { id:"d6a", time:"8:30am", title:"Drive to the museum", tags:["Travel"], change:"keep",
+    what:"About one hour by car, as per your sheet.",
+    why:"A big day out.",
+    tip:"Leave straight after breakfast. Bring snacks, an audio story or a tablet with downloads.",
+    mission:"Road game: spot ten different vehicles.", ok:[], check:["Journey time at your departure time"] },
+  { id:"d6b", time:"10:00am", title:"Shenzhen Science and Technology Museum", tags:["Indoor"], change:"adapted",
+    changeNote:"Plan three zones only. Add the children's session if your tickets allow.",
+    what:"Opens 10:00am to 5:00pm Tuesday to Friday and 9:30am to 5:00pm at weekends. Booking is through a WeChat mini programme, and entry uses the registered passport.",
+    why:"Robots, space and hands-on exhibits.",
+    tip:"Pick robots, space and one more zone, then leave by 3pm. Keep the ticket QR code on your phone and carry passports. Ticket sites also list a separate children's science park session, which may suit ages 5 and 7.",
+    mission:"Mission control: find a robot, a rocket and a planet.",
+    backup:"If you hit a queue, do a different zone first and return later.",
+    ok:["Opening hours Tuesday to Sunday","Booking via WeChat mini programme"],
+    check:["Price: sources differ, one says free entry and ticket sites list paid tickets","Age range of the children's science park"] },
+  { id:"d6c", time:"12:30pm", title:"Lunch and quiet break", tags:["Food","Rest"], change:"added",
+    what:"Eat inside or nearby, then 30 minutes sitting down.",
+    why:"Keeps energy up.",
+    tip:"Bring your own snacks in case food options are limited.",
+    mission:"Draw the invention you would build.", ok:[], check:["Food options near the museum"] },
+  { id:"d6d", time:"3:30pm", title:"Drive back", tags:["Travel"], change:"keep",
+    what:"Head back to the hotel and have an early night.",
+    why:"A big day done.",
+    tip:"Order room service or eat near the hotel to save energy.",
+    mission:"Tell the grown-ups your top three exhibits.", ok:[], check:[] }
+  ]},
+
+{ id:"d7", tab:"9 Dec", sub:"Wed", city:"Shenzhen to Hong Kong", title:"Back to Hong Kong",
+  intro:"The border crossing is the long bit. After that, easy waterfront walking.",
+  backup:"If the children are tired after lunch, skip the Avenue of Stars and watch the harbour from near the hotel.",
+  stops:[
+  { id:"d7a", time:"Morning", title:"Check out and private driver to Hong Kong", tags:["Travel"], change:"keep",
+    what:"About one hour by private driver to Hong Kong.",
+    why:"A door-to-door ride avoids carrying bags on the metro.",
+    tip:"Ask the driver which crossing is quietest at your time. Keep passports in an easy pocket, with snacks and a game ready for any queue. Ask whether a child seat is available.",
+    mission:"Passport guardian: each child holds their own passport wallet until the officer asks.",
+    ok:[], check:["Border crossing and waiting time","Child seats in the car"] },
+  { id:"d7b", time:"Midday", title:"Hotel Alexandra check-in and lunch at Sister Wah", tags:["Food"], change:"keep",
+    what:"Check in at Hotel Alexandra, then lunch at Sister Wah.",
+    why:"Settle in and eat something familiar.",
+    tip:"If the room is not ready, store the bags and eat first.",
+    mission:"Find the lift buttons for your floor and press them.", ok:[],
+    check:["Check-in time","Sister Wah booking and hours"] },
+  { id:"d7c", time:"2:00pm", title:"Hotel rest", tags:["Rest"], change:"added",
+    what:"One hour of quiet before the waterfront.", why:"Sets up the evening.",
+    tip:"Charge phones and pack jackets.", mission:"Draw the border crossing from memory.", ok:[], check:[] },
+  { id:"d7d", time:"4:00pm", title:"Tsim Sha Tsui and the Avenue of Stars", tags:["Outdoor"], change:"keep",
+    what:"A harbourfront walk.",
+    why:"Space to run and harbour views.",
+    tip:"Dress warm because the waterfront is windy. Keep dinner for before the show.",
+    mission:"Harbour count: how many boats can you count in five minutes?",
+    ok:[], check:["Dinner place near the waterfront"] },
+  { id:"d7e", time:"8:00pm", title:"Symphony of Lights", tags:["Outdoor"], change:"adapted",
+    changeNote:"Kept, since it is short. Eat first and plan to go straight back.",
+    what:"The show runs nightly at 8:00pm and lasts about 10 minutes.",
+    why:"Buildings that flash to music.",
+    tip:"Arrive by 7:30pm to get a spot near the Cultural Centre or the Avenue of Stars. The show can be cancelled in severe weather.",
+    mission:"Colour counter: how many colours can you name?",
+    backup:"If the children are flagging, skip it and go to bed.",
+    ok:["Nightly at 8pm","About 10 minutes"], check:[] }
+  ]},
+
+{ id:"d8", tab:"10 Dec", sub:"Thu", city:"Hong Kong", title:"City animals",
+  intro:"Your sheet is blank for this day. This is a suggestion for an easy, free, animal-themed morning.",
+  backup:"If it rains, spend the morning in an indoor play area or a mall and have a long lunch.",
+  stops:[
+  { id:"d8a", time:"9:30am", title:"Hong Kong Zoological and Botanical Gardens", tags:["Outdoor"], change:"added",
+    what:"Free entry. Open 6am to 7pm, with the greenhouse open 9am to 4:30pm.",
+    why:"Animals, including primates and birds, and a playground. It costs nothing.",
+    tip:"Weekday mornings are quieter. Walk the animals first and the playground last.",
+    mission:"Animal bingo: tick each one you spot if it is on show today.",
+    bingo:["Orang-utan","Lemur","Flamingo","Python","A big bird","A butterfly","Something green","Something that climbs"],
+    ok:["Free entry","Opening hours"], check:["Which animals are on show today"] },
+  { id:"d8b", time:"12:00pm", title:"Lunch and rest", tags:["Food","Rest"], change:"added",
+    what:"Lunch near the gardens, then back to the hotel.", why:"A long break keeps the afternoon fun.",
+    tip:"Pick somewhere with a kids' menu.", mission:"Draw your favourite animal from the gardens.", ok:[], check:["Where to eat"] },
+  { id:"d8c", time:"3:30pm", title:"Optional harbour ferry ride", tags:["Outdoor","Travel"], change:"added",
+    what:"A short ride across the harbour, if energy allows.",
+    why:"A boat ride and skyline views.",
+    tip:"Keep it as a bonus.",
+    mission:"Wave to a boat.", ok:[], check:["Departure point and fares"] }
+  ]},
+
+{ id:"d9", tab:"11 Dec", sub:"Fri", city:"Hong Kong", title:"Pandas at Ocean Park",
+  intro:"Your sheet is blank for this day too. Ocean Park suits an animal-loving 7 year old and a 5 year old who tires early.",
+  backup:"If you would rather not do a full park day, spend the morning at the Middle Road playground in Tsim Sha Tsui.",
+  warn:"Opening hours vary by date. Check the Ocean Park calendar for Friday 11 December before you go.",
+  stops:[
+  { id:"d9a", time:"10:00am", title:"Ocean Park Hong Kong", tags:["Outdoor"], change:"added",
+    what:"Pandas, an aquarium and a cable car. Ocean Park's pages list adults (12+) at HK$538 and children (3 to 11) at HK$269. For 3 adults and 2 children that is HK$2,152, roughly S$350 to S$375.",
+    why:"Pandas and aquarium animals.",
+    tip:"Pick three or four things only: pandas, aquarium and the cable car. Ride the cable car instead of walking the hills.",
+    mission:"Panda cards: scan the QR codes around the park to collect panda cards.",
+    ok:["Child ticket price (ages 3 to 11)"], check:["Opening hours and days for 11 December","Journey time from the hotel","Ride height limits"] },
+  { id:"d9b", time:"1:00pm", title:"Lunch and rest", tags:["Food","Rest"], change:"added",
+    what:"Eat and sit down for 30 minutes.", why:"Keeps the afternoon fun.",
+    tip:"Pack snacks and water.", mission:"Draw your favourite sea animal.", ok:[], check:["Kids' meals inside the park"] },
+  { id:"d9c", time:"5:00pm", title:"Early dinner and back", tags:["Food","Travel"], change:"added",
+    what:"Dinner near the hotel and an early night.", why:"Tomorrow is a travel day.",
+    tip:"Start packing before bed.", mission:"Pick one souvenir each and tell us why.", ok:[], check:[] }
+  ]},
+
+{ id:"d10", tab:"12 Dec", sub:"Sat", city:"Hong Kong to Singapore", title:"Home day",
+  intro:"Check out, drop bags, a long gap before the 8:15pm flight. Pace it.",
+  backup:"If the children are tired, drop the luggage and find a quiet seating area at the airport.",
+  stops:[
+  { id:"d10a", time:"Morning", title:"Check out and go to Hong Kong Airport T1", tags:["Travel"], change:"keep",
+    what:"Drop your luggage at the airport, then visit Citygate Outlets.",
+    why:"Bags gone means freedom.",
+    tip:"Check the baggage drop times for your 8:15pm flight. Keep pyjamas and a snack in hand luggage.",
+    mission:"Luggage captain: each child pulls their own bag to the drop.",
+    ok:[], check:["Early baggage drop opening time"] },
+  { id:"d10b", time:"11:30am", title:"Citygate Outlets and lunch", tags:["Indoor","Food"], change:"adapted",
+    changeNote:"Shop for 90 minutes at most, then lunch and a play break.",
+    what:"Browse, then lunch.",
+    why:"A last bit of fun.",
+    tip:"Set a time limit and a budget. Agree one small thing each.",
+    mission:"Souvenir budget: each child chooses one small thing.",
+    ok:[], check:["Kids' menu or play area"] },
+  { id:"d10c", time:"2:30pm", title:"Quiet time", tags:["Rest"], change:"added",
+    what:"Rest in a quiet corner or the airport lounge area.",
+    why:"A long evening is ahead.",
+    tip:"Charge devices and offer a snack.", mission:"Write your favourite memory on a card.", ok:[], check:[] },
+  { id:"d10d", time:"8:15pm", title:"Flight to Singapore", tags:["Travel"], change:"keep",
+    what:"Departs about 8:15pm and lands about 12:20am on 13 December.",
+    why:"Children will probably sleep on the plane.",
+    tip:"Put pyjamas on before boarding. Keep a blanket and a snack handy.",
+    mission:"Trip review: name your top three moments.", ok:[], check:[] }
+  ]}
+];
+
+var BEFORE = [
+ "Check passport validity and entry rules for all five travellers.",
+ "Confirm the Safari Park tickets match each child's height band.",
+ "Book the Science Museum timed tickets. Set up WeChat if the booking needs it.",
+ "Buy Qianhai Snow World tickets online.",
+ "Check the water go-karts and the immersive art exhibition are open.",
+ "Save the ferry check-in times and a backup sailing.",
+ "Ask the Hong Kong driver about child seats and the best border crossing.",
+ "Tell both hotels your arrival times.",
+ "Download offline maps and set up data or roaming.",
+ "Write the hotel name and a parent phone number on a card in each child's pocket.",
+ "Sort travel insurance."
+];
+var PACK = [
+ "Warm layers, gloves and hats for the snow",
+ "Spare socks, one extra pair per child per day",
+ "Rain jackets",
+ "Snacks and refillable water bottles",
+ "Wet wipes, tissues and hand sanitiser",
+ "Basic first aid kit and any usual medicines",
+ "Colouring books, pencils and small games",
+ "Tablet with downloaded shows, plus headphones",
+ "Power bank, cables and plug adaptors",
+ "Passport wallets and copies of documents",
+ "Change of clothes in the day bag",
+ "Pyjamas for the flight home",
+ "Sun hats and sunscreen",
+ "A foldable bag for souvenirs"
+];
+
+var KEY = "family-trip-planner-v1";
+var state = { done:{}, star:{}, bingo:{}, list:{}, tab:"d1", view:"days" };
+try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); for (var k in s) state[k] = s[k]; } } catch (e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+var openStops = {};
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function dayById(id){ for (var i=0;i<DAYS.length;i++) if (DAYS[i].id===id) return DAYS[i]; return DAYS[0]; }
+function dayDone(d){ for (var i=0;i<d.stops.length;i++) if (!state.done[d.stops[i].id]) return false; return true; }
+function dayCount(d){ var n=0; for (var i=0;i<d.stops.length;i++) if (state.done[d.stops[i].id]) n++; return n; }
+
+function updateOverall(){
+  var total=0, done=0, stars=0, mTotal=0;
+  DAYS.forEach(function(d){ total+=d.stops.length; d.stops.forEach(function(s){ mTotal++; if(state.done[s.id]) done++; if(state.star[s.id]) stars++; }); });
+  $("overallText").textContent = done+" of "+total+" stops";
+  var pct = total? Math.round(done/total*100):0;
+  $("overallBar").firstElementChild.style.width = pct+"%";
+  $("overallBar").setAttribute("aria-valuenow", pct);
+  $("starsLine").textContent = "Kids' mission stars: "+stars+" of "+mTotal;
+}
+
+function renderTabs(){
+  var h="";
+  DAYS.forEach(function(d){
+    var sel = d.id===state.tab;
+    h += '<button class="tab'+(dayDone(d)?" done":"")+'" role="tab" data-tab="'+d.id+'" aria-selected="'+sel+'">'+esc(d.tab)+'<small>'+esc(d.sub)+'</small></button>';
+  });
+  $("tabs").innerHTML = h;
+  var cur = $("tabs").querySelector('[aria-selected="true"]');
+  if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({block:"nearest", inline:"center"}); } catch(e){} }
+}
+
+function bingoHtml(s){
+  var h='<div class="bingo" role="group" aria-label="Animal bingo">';
+  s.bingo.forEach(function(name,i){
+    var k="b_"+s.id+"_"+i;
+    h+='<button type="button" data-bingo="'+k+'" data-stop="'+s.id+'" aria-pressed="'+(!!state.bingo[k])+'">'+esc(name)+'</button>';
+  });
+  h+='</div><p class="bingo-msg" id="bm_'+s.id+'"></p>';
+  return h;
+}
+function bingoCount(s){ var n=0; s.bingo.forEach(function(_,i){ if(state.bingo["b_"+s.id+"_"+i]) n++; }); return n; }
+function bingoMsg(s){
+  var el=$("bm_"+s.id); if(!el) return;
+  var n=bingoCount(s);
+  el.textContent = n>=4 ? "Ranger badge earned. "+n+" spotted." : (n? n+" spotted so far.":"");
+}
+
+function stopHtml(s, idx){
+  var isOpen = openStops[s.id]===undefined ? idx===0 : openStops[s.id];
+  var done = !!state.done[s.id];
+  var h='<article class="stop'+(done?" is-done":"")+'" id="st_'+s.id+'">';
+  h+='<div class="stop-head">';
+  h+='<label class="tick"><input type="checkbox" data-done="'+s.id+'" '+(done?"checked":"")+' aria-label="Mark done: '+esc(s.title)+'"><span class="box"></span></label>';
+  h+='<button type="button" class="stop-main" data-toggle="'+s.id+'" aria-expanded="'+isOpen+'" aria-controls="pn_'+s.id+'">';
+  h+='<span class="chev">'+(isOpen?"Less":"More")+'</span>';
+  h+='<span class="time">'+esc(s.time)+'</span><span class="stop-title">'+esc(s.title)+'</span>';
+  h+='<span class="tags">';
+  s.tags.forEach(function(t){ h+='<span class="tag t-'+t+'">'+t+'</span>'; });
+  var label={keep:"Kept",adapted:"Adapted",swapped:"Swapped",added:"Added"}[s.change];
+  h+='<span class="chip '+s.change+'">'+label+'</span>';
+  h+='</span></button></div>';
+  h+='<p class="what">'+esc(s.what)+'</p>';
+  h+='<div class="panel" id="pn_'+s.id+'"'+(isOpen?"":" hidden")+'>';
+  if (s.changeNote) h+='<div class="blk"><h4>What changed</h4><p>'+esc(s.changeNote)+'</p></div>';
+  h+='<div class="blk"><h4>Why kids will like it</h4><p>'+esc(s.why)+'</p></div>';
+  h+='<div class="blk"><h4>Parent tip</h4><p>'+esc(s.tip)+'</p></div>';
+  h+='<div class="mission"><button type="button" class="star" data-star="'+s.id+'" aria-pressed="'+(!!state.star[s.id])+'" aria-label="Mission done for '+esc(s.title)+'">&#9733;</button><div><h4>Kids\' mission</h4><p>'+esc(s.mission)+'</p>'+(s.bingo?bingoHtml(s):"")+'</div></div>';
+  if (s.backup) h+='<div class="blk"><h4>Backup</h4><p>'+esc(s.backup)+'</p></div>';
+  if (s.ok && s.ok.length){ h+='<div class="blk"><h4>Checked</h4><ul>'; s.ok.forEach(function(x){ h+='<li>'+esc(x)+'</li>'; }); h+='</ul></div>'; }
+  if (s.check && s.check.length){ h+='<div class="blk verify"><h4>Still to check</h4><ul>'; s.check.forEach(function(x){ h+='<li>'+esc(x)+'</li>'; }); h+='</ul></div>'; }
+  h+='</div></article>';
+  return h;
+}
+
+function dayHeaderCounts(d){
+  var n=dayCount(d), t=d.stops.length;
+  $("dc").textContent = n+" of "+t+" done";
+  $("db").firstElementChild.style.width = Math.round(n/t*100)+"%";
+  $("db").setAttribute("aria-valuenow", Math.round(n/t*100));
+  $("dd").className = "day-done"+(n===t?" show":"");
+}
+
+function renderDay(){
+  var d = dayById(state.tab);
+  var h='<div class="day-head"><p class="city">'+esc(d.city)+'</p><h2>'+esc(d.title)+'</h2><p>'+esc(d.intro)+'</p>';
+  h+='<div class="day-count"><span id="dc"></span><span>'+esc(d.tab)+'</span></div>';
+  h+='<div class="bar" id="db" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>';
+  h+='<div class="day-done" id="dd" role="status">Day complete. Well done, explorers.</div></div>';
+  if (d.warn) h+='<p class="note"><strong>Check first.</strong> '+esc(d.warn)+'</p>';
+  d.stops.forEach(function(s,i){ h+=stopHtml(s,i); });
+  h+='<div class="day-backup"><h3>Rainy-day or too-tired backup</h3><p>'+esc(d.backup)+'</p></div>';
+  $("dayBody").innerHTML = h;
+  d.stops.forEach(function(s){ if (s.bingo) bingoMsg(s); });
+  dayHeaderCounts(d);
+}
+
+function listHtml(title, lead, items, prefix){
+  var h='<div class="list-card"><h2>'+esc(title)+'</h2><p class="lead">'+esc(lead)+'</p>';
+  items.forEach(function(t,i){
+    var k=prefix+i;
+    h+='<label class="li"><span class="tick"><input type="checkbox" data-list="'+k+'" '+(state.list[k]?"checked":"")+'><span class="box"></span></span><span class="txt">'+esc(t)+'</span></label>';
+  });
+  return h+'</div>';
+}
+
+function setView(v){
+  state.view=v; save();
+  ["days","before","pack"].forEach(function(x){
+    var b=$("v-"+x); if(b) b.setAttribute("aria-selected", String(x===v));
+  });
+  $("daysView").hidden = v!=="days";
+  $("beforeView").hidden = v!=="before";
+  $("packView").hidden = v!=="pack";
+}
+
+function confetti(){
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var box=$("confetti"), cols=["#f2a516","#0f7c8a","#e2574c","#2b8a57","#6b4fc7"], h="";
+  for (var i=0;i<36;i++){
+    h+='<i style="left:'+Math.round(Math.random()*100)+'%;background:'+cols[i%cols.length]+';animation-delay:'+(Math.random()*0.5).toFixed(2)+'s"></i>';
+  }
+  box.innerHTML=h;
+  setTimeout(function(){ box.innerHTML=""; }, 2600);
+}
+
+document.addEventListener("click", function(e){
+  var t = e.target;
+  var tabBtn = t.closest("[data-tab]");
+  if (tabBtn){ state.tab=tabBtn.getAttribute("data-tab"); save(); renderTabs(); renderDay(); return; }
+  var viewBtn = t.closest("[data-view]");
+  if (viewBtn){ setView(viewBtn.getAttribute("data-view")); return; }
+  var tog = t.closest("[data-toggle]");
+  if (tog){
+    var id=tog.getAttribute("data-toggle");
+    var panel=$("pn_"+id), open=panel.hidden;
+    panel.hidden=!open; openStops[id]=open;
+    tog.setAttribute("aria-expanded", String(open));
+    tog.querySelector(".chev").textContent = open?"Less":"More";
+    return;
+  }
+  var st = t.closest("[data-star]");
+  if (st){
+    var sid=st.getAttribute("data-star");
+    state.star[sid]=!state.star[sid];
+    st.setAttribute("aria-pressed", String(!!state.star[sid]));
+    save(); updateOverall(); return;
+  }
+  var bg = t.closest("[data-bingo]");
+  if (bg){
+    var bk=bg.getAttribute("data-bingo");
+    state.bingo[bk]=!state.bingo[bk];
+    bg.setAttribute("aria-pressed", String(!!state.bingo[bk]));
+    var stopId=bg.getAttribute("data-stop");
+    var d=dayById(state.tab);
+    d.stops.forEach(function(s){ if(s.id===stopId) bingoMsg(s); });
+    save(); return;
+  }
+  if (t.id==="resetBtn"){
+    state.done={}; state.star={}; state.bingo={}; state.list={};
+    save(); init(); return;
+  }
+});
+document.addEventListener("change", function(e){
+  var t=e.target;
+  if (t.hasAttribute("data-done")){
+    var id=t.getAttribute("data-done"), d=dayById(state.tab), was=dayDone(d);
+    state.done[id]=t.checked; if(!t.checked) delete state.done[id];
+    var card=$("st_"+id); if(card) card.classList.toggle("is-done", t.checked);
+    save(); updateOverall(); dayHeaderCounts(d);
+    var tabEl=$("tabs").querySelector('[data-tab="'+d.id+'"]');
+    if (tabEl) tabEl.classList.toggle("done", dayDone(d));
+    if (!was && dayDone(d)) confetti();
+  } else if (t.hasAttribute("data-list")){
+    var k=t.getAttribute("data-list");
+    if (t.checked) state.list[k]=true; else delete state.list[k];
+    save();
+  }
+});
+
+function init(){
+  renderTabs(); renderDay(); updateOverall();
+  $("beforeView").innerHTML = listHtml("Before we go","Tick each one as it is sorted.",BEFORE,"b");
+  $("packView").innerHTML = listHtml("Packing list","Dec weather swings from cool in Shenzhen to snow indoors. Pack layers.",PACK,"p");
+  setView(state.view||"days");
+}
+init();
+</script>
+</body>
+</html>
