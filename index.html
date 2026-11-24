@@ -60,7 +60,7 @@ h1{font-family:var(--f-display);font-weight:600;font-size:clamp(1.7rem,6vw,2.3re
 .stars-line{margin:8px 0 0;color:var(--muted);font-size:.95rem}
 .legend{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
 .views{display:flex;gap:6px;margin:16px 0 0;background:var(--soft);padding:5px;border-radius:14px}
-.views button{flex:1;min-height:48px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:700 1rem var(--f-body);cursor:pointer}
+.views button{flex:1;min-height:48px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:700 .9rem var(--f-body);padding:0 4px;cursor:pointer}
 .views button[aria-selected="true"]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.18)}
 button:focus-visible,input:focus-visible+.box,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .tabs-wrap{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px;margin-top:6px}
@@ -118,6 +118,14 @@ button:focus-visible,input:focus-visible+.box,a:focus-visible{outline:3px solid 
 .bingo button{min-height:52px;padding:6px 8px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:700 .92rem/1.2 var(--f-body);cursor:pointer;text-align:left}
 .bingo button[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
 .bingo-msg{margin:6px 0 0;font-weight:800;color:var(--good);min-height:1.4em}
+.wx-wrap{margin:14px 0 0}
+.wx-wrap h3{margin:0 0 6px;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.wx{display:flex;flex-wrap:wrap;gap:8px}
+.wx button{min-height:44px;padding:0 16px;border:2px solid var(--line);border-radius:99px;background:var(--card);color:var(--ink);font:700 .92rem var(--f-body);cursor:pointer}
+.wx button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.typebox{margin-top:10px}
+.typebox label{display:block;font-size:.85rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+.typebox input{width:100%;min-height:48px;padding:8px 12px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:600 1rem var(--f-body)}
 .day-backup{background:var(--card);border:2px dashed var(--line);border-radius:18px;padding:12px 14px;margin:16px 0 0}
 .day-backup h3{margin:0 0 4px;font-family:var(--f-display);font-weight:500;font-size:1.1rem}
 .day-backup p{margin:0;font-size:.97rem}
@@ -155,8 +163,9 @@ button:focus-visible,input:focus-visible+.box,a:focus-visible{outline:3px solid 
     </div>
     <div class="views" role="tablist" aria-label="Sections">
       <button role="tab" id="v-days" aria-selected="true" data-view="days">Days</button>
-      <button role="tab" id="v-before" aria-selected="false" data-view="before">Before we go</button>
+      <button role="tab" id="v-before" aria-selected="false" data-view="before">Before</button>
       <button role="tab" id="v-pack" aria-selected="false" data-view="pack">Packing</button>
+      <button role="tab" id="v-transport" aria-selected="false" data-view="transport">Transport</button>
     </div>
   </header>
 
@@ -166,6 +175,7 @@ button:focus-visible,input:focus-visible+.box,a:focus-visible{outline:3px solid 
   </section>
   <section id="beforeView" hidden></section>
   <section id="packView" hidden></section>
+  <section id="transportView" hidden></section>
 
   <section class="sources" aria-label="Sources">
     <h2>What was checked</h2>
@@ -194,7 +204,7 @@ var DAYS = [
     what:"Check in at Changi T4 and fly to Hong Kong, landing about 11:25am.",
     why:"Window seats, snacks and a real aeroplane.",
     tip:"Keep snacks, a change of top and wipes in hand luggage. Offer a drink or a sweet on take-off and landing to help little ears.",
-    mission:"Tail-fin spotter: find five different airline logos before you board.", ok:[], check:[] },
+    mission:"Plane spotter: tick each airline you see on a tail fin, and type any others you spot. Four ticks earns a badge.", bingo:["Singapore Airlines","Scoot","Cathay Pacific","HK Express","Emirates","Qantas","Japan Airlines","Another airline"], bingoLabel:"Airline checklist", badge:"Plane-spotter badge", verb:"spotted", type:"Other airlines I spotted", ok:[], check:[] },
   { id:"d1b", time:"About 1:00pm", title:"SkyPier ferry to Shekou", tags:["Travel"], change:"keep",
     what:"Ferry leaves about 1:00pm and arrives about 1:40pm. Check-in closes 40 minutes before departure and boarding closes 30 minutes before.",
     why:"A boat ride is a treat after a flight.",
@@ -231,11 +241,11 @@ var DAYS = [
   { id:"d2a", time:"About 10:00am", title:"Qianhai Ice and Snow World", tags:["Indoor"], change:"keep",
     what:"A two-hour snow session. A booking site lists the standard 2-hour ticket as including equipment. Expect snow play areas with a luge and bumper cars on ice.",
     why:"Real snow indoors, sliding and ice bumper cars.",
-    tip:"For a 5 and a 7 year old, choose the snow play ticket over a ski ticket. Buy online first to avoid the ticket queue. Bring spare socks and gloves, and wear leggings under trousers. Allow about 45 minutes in the car from Luohu.",
-    mission:"Snow zoo: build a snow animal in five minutes. The 7 year old picks the animal.",
+    tip:"If the children ski, book a beginners' lesson if one is offered and check helmets, boots and minimum ages first. Otherwise the snow play ticket is the easier choice for a 5 and a 7 year old. Buy online first to avoid the ticket queue. Bring spare socks and gloves, and wear leggings under trousers. Allow about 45 minutes in the car from Luohu.",
+    mission:"Ski stars: practise the pizza shape (a wedge) to slow down, then stop smoothly three times in a row. If you play in the snow instead, build a snow animal in five minutes.",
     backup:"If the sessions are full, book the next slot and have a hot drink while you wait.",
     ok:["Two-hour ticket, with equipment listed as included"],
-    check:["Age and height limits for slopes and snow play","Drive time from Luohu","Whether snowsuits are included for children"] },
+    check:["Age, height and lesson rules for skiing and snow play","Drive time from Luohu","Whether snowsuits are included for children"] },
   { id:"d2b", time:"12:30pm", title:"MixC lunch, ice cream and bubble tea", tags:["Food","Rest"], change:"keep",
     changeNote:"Treats come after a proper lunch.",
     what:"Lunch, then ice cream and bubble tea.",
@@ -363,7 +373,7 @@ var DAYS = [
     what:"Opens 10:00am to 5:00pm Tuesday to Friday and 9:30am to 5:00pm at weekends. Booking is through a WeChat mini programme, and entry uses the registered passport.",
     why:"Robots, space and hands-on exhibits.",
     tip:"Pick robots, space and one more zone, then leave by 3pm. Keep the ticket QR code on your phone and carry passports. Ticket sites also list a separate children's science park session, which may suit ages 5 and 7.",
-    mission:"Mission control: find a robot, a rocket and a planet.",
+    mission:"Mission control: find a robot, a rocket and a planet, then write your favourite exhibit below.", bingo:["A robot","A rocket","A planet"], bingoLabel:"Mission checklist", badge:"Mission control badge", verb:"found", goal:3, type:"My favourite exhibit",
     backup:"If you hit a queue, do a different zone first and return later.",
     ok:["Opening hours Tuesday to Sunday","Booking via WeChat mini programme"],
     check:["Price: sources differ, one says free entry and ticket sites list paid tickets","Age range of the children's science park"] },
@@ -386,8 +396,8 @@ var DAYS = [
   { id:"d7a", time:"Morning", title:"Check out and private driver to Hong Kong", tags:["Travel"], change:"keep",
     what:"About one hour by private driver to Hong Kong.",
     why:"A door-to-door ride avoids carrying bags on the metro.",
-    tip:"Ask the driver which crossing is quietest at your time. Keep passports in an easy pocket, with snacks and a game ready for any queue. Ask whether a child seat is available.",
-    mission:"Passport guardian: each child holds their own passport wallet until the officer asks.",
+    tip:"Ask the driver which crossing is quietest at your time. Adults hold all the passports. Keep snacks and a game ready for any queue, and ask whether a child seat is available.",
+    mission:"Sign spotter: find three signs written in both Chinese and English. Type one of them below.", type:"One sign I found",
     ok:[], check:["Border crossing and waiting time","Child seats in the car"] },
   { id:"d7b", time:"Midday", title:"Hotel Alexandra check-in and lunch at Sister Wah", tags:["Food"], change:"keep",
     what:"Check in at Hotel Alexandra, then lunch at Sister Wah.",
@@ -462,7 +472,7 @@ var DAYS = [
     what:"Drop your luggage at the airport, then visit Citygate Outlets.",
     why:"Bags gone means freedom.",
     tip:"Check the baggage drop times for your 8:15pm flight. Keep pyjamas and a snack in hand luggage.",
-    mission:"Luggage captain: each child pulls their own bag to the drop.",
+    mission:"Airport detective: find our gate number, a departure board and a plane taking off. Type the gate number below.", type:"Our gate number",
     ok:[], check:["Early baggage drop opening time"] },
   { id:"d10b", time:"11:30am", title:"Citygate Outlets and lunch", tags:["Indoor","Food"], change:"adapted",
     changeNote:"Shop for 90 minutes at most, then lunch and a play break.",
@@ -513,14 +523,28 @@ var PACK = [
  "A foldable bag for souvenirs"
 ];
 
+var TRANSPORT = [
+ "Aeroplane: Singapore to Hong Kong (3 Dec)",
+ "Ferry: SkyPier to Shekou (3 Dec)",
+ "Taxi: Shekou to Luohu (3 Dec)",
+ "Car: day trips around Shenzhen (4 to 8 Dec)",
+ "Water go-kart boat: OCT Harbour (4 Dec, if open)",
+ "Safari Park sightseeing bus (7 Dec, if you use it)",
+ "Metro (any day, if you use it)",
+ "Private driver across the border (9 Dec)",
+ "Walking along the Tsim Sha Tsui waterfront (9 Dec)",
+ "Harbour ferry (10 Dec, optional)",
+ "Cable car at Ocean Park (11 Dec, if you go)",
+ "Aeroplane: Hong Kong to Singapore (12 Dec)"
+];
 var KEY = "family-trip-planner-v1";
-var state = { done:{}, star:{}, bingo:{}, list:{}, tab:"d1", view:"days" };
+var state = { done:{}, star:{}, bingo:{}, list:{}, text:{}, wx:{}, tab:"d1", view:"days" };
 try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); for (var k in s) state[k] = s[k]; } } catch (e) {}
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 var openStops = {};
 
 function $(id){ return document.getElementById(id); }
-function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function dayById(id){ for (var i=0;i<DAYS.length;i++) if (DAYS[i].id===id) return DAYS[i]; return DAYS[0]; }
 function dayDone(d){ for (var i=0;i<d.stops.length;i++) if (!state.done[d.stops[i].id]) return false; return true; }
 function dayCount(d){ var n=0; for (var i=0;i<d.stops.length;i++) if (state.done[d.stops[i].id]) n++; return n; }
@@ -547,7 +571,7 @@ function renderTabs(){
 }
 
 function bingoHtml(s){
-  var h='<div class="bingo" role="group" aria-label="Animal bingo">';
+  var h='<div class="bingo" role="group" aria-label="'+esc(s.bingoLabel||"Animal bingo")+'">';
   s.bingo.forEach(function(name,i){
     var k="b_"+s.id+"_"+i;
     h+='<button type="button" data-bingo="'+k+'" data-stop="'+s.id+'" aria-pressed="'+(!!state.bingo[k])+'">'+esc(name)+'</button>';
@@ -559,9 +583,19 @@ function bingoCount(s){ var n=0; s.bingo.forEach(function(_,i){ if(state.bingo["
 function bingoMsg(s){
   var el=$("bm_"+s.id); if(!el) return;
   var n=bingoCount(s);
-  el.textContent = n>=4 ? "Ranger badge earned. "+n+" spotted." : (n? n+" spotted so far.":"");
+  var goal = s.goal||4, verb = s.verb||"spotted", badge = s.badge||"Ranger badge";
+  el.textContent = n>=goal ? badge+" earned. "+n+" "+verb+"." : (n? n+" "+verb+" so far.":"");
 }
 
+function typeHtml(s){
+  return '<div class="typebox"><label for="tx_'+s.id+'">'+esc(s.type)+'</label><input type="text" id="tx_'+s.id+'" data-text="'+s.id+'" maxlength="120" autocomplete="off" value="'+esc(state.text[s.id]||"")+'"></div>';
+}
+var WX = ["Sunny","Cloudy","Rainy","Windy","Cold","Snowy"];
+function weatherHtml(d){
+  var h='<div class="wx-wrap"><h3>Today\'s weather</h3><div class="wx" role="group" aria-label="Weather today">';
+  WX.forEach(function(w){ var k=d.id+"_"+w; h+='<button type="button" data-wx="'+k+'" aria-pressed="'+(!!state.wx[k])+'">'+w+'</button>'; });
+  return h+'</div></div>';
+}
 function stopHtml(s, idx){
   var isOpen = openStops[s.id]===undefined ? idx===0 : openStops[s.id];
   var done = !!state.done[s.id];
@@ -581,7 +615,7 @@ function stopHtml(s, idx){
   if (s.changeNote) h+='<div class="blk"><h4>What changed</h4><p>'+esc(s.changeNote)+'</p></div>';
   h+='<div class="blk"><h4>Why kids will like it</h4><p>'+esc(s.why)+'</p></div>';
   h+='<div class="blk"><h4>Parent tip</h4><p>'+esc(s.tip)+'</p></div>';
-  h+='<div class="mission"><button type="button" class="star" data-star="'+s.id+'" aria-pressed="'+(!!state.star[s.id])+'" aria-label="Mission done for '+esc(s.title)+'">&#9733;</button><div><h4>Kids\' mission</h4><p>'+esc(s.mission)+'</p>'+(s.bingo?bingoHtml(s):"")+'</div></div>';
+  h+='<div class="mission"><button type="button" class="star" data-star="'+s.id+'" aria-pressed="'+(!!state.star[s.id])+'" aria-label="Mission done for '+esc(s.title)+'">&#9733;</button><div><h4>Kids\' mission</h4><p>'+esc(s.mission)+'</p>'+(s.bingo?bingoHtml(s):"")+(s.type?typeHtml(s):"")+'</div></div>';
   if (s.backup) h+='<div class="blk"><h4>Backup</h4><p>'+esc(s.backup)+'</p></div>';
   if (s.ok && s.ok.length){ h+='<div class="blk"><h4>Checked</h4><ul>'; s.ok.forEach(function(x){ h+='<li>'+esc(x)+'</li>'; }); h+='</ul></div>'; }
   if (s.check && s.check.length){ h+='<div class="blk verify"><h4>Still to check</h4><ul>'; s.check.forEach(function(x){ h+='<li>'+esc(x)+'</li>'; }); h+='</ul></div>'; }
@@ -602,7 +636,7 @@ function renderDay(){
   var h='<div class="day-head"><p class="city">'+esc(d.city)+'</p><h2>'+esc(d.title)+'</h2><p>'+esc(d.intro)+'</p>';
   h+='<div class="day-count"><span id="dc"></span><span>'+esc(d.tab)+'</span></div>';
   h+='<div class="bar" id="db" role="progressbar" aria-label="Day progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>';
-  h+='<div class="day-done" id="dd" role="status">Day complete. Well done, explorers.</div></div>';
+  h+='<div class="day-done" id="dd" role="status">Day complete. Well done, explorers.</div>'+weatherHtml(d)+'</div>';
   if (d.warn) h+='<p class="note"><strong>Check first.</strong> '+esc(d.warn)+'</p>';
   d.stops.forEach(function(s,i){ h+=stopHtml(s,i); });
   h+='<div class="day-backup"><h3>Rainy-day or too-tired backup</h3><p>'+esc(d.backup)+'</p></div>';
@@ -622,12 +656,13 @@ function listHtml(title, lead, items, prefix){
 
 function setView(v){
   state.view=v; save();
-  ["days","before","pack"].forEach(function(x){
+  ["days","before","pack","transport"].forEach(function(x){
     var b=$("v-"+x); if(b) b.setAttribute("aria-selected", String(x===v));
   });
   $("daysView").hidden = v!=="days";
   $("beforeView").hidden = v!=="before";
   $("packView").hidden = v!=="pack";
+  $("transportView").hidden = v!=="transport";
 }
 
 function confetti(){
@@ -662,6 +697,13 @@ document.addEventListener("click", function(e){
     st.setAttribute("aria-pressed", String(!!state.star[sid]));
     save(); updateOverall(); return;
   }
+  var wx = t.closest("[data-wx]");
+  if (wx){
+    var wk=wx.getAttribute("data-wx");
+    if (state.wx[wk]) delete state.wx[wk]; else state.wx[wk]=true;
+    wx.setAttribute("aria-pressed", String(!!state.wx[wk]));
+    save(); return;
+  }
   var bg = t.closest("[data-bingo]");
   if (bg){
     var bk=bg.getAttribute("data-bingo");
@@ -673,9 +715,13 @@ document.addEventListener("click", function(e){
     save(); return;
   }
   if (t.id==="resetBtn"){
-    state.done={}; state.star={}; state.bingo={}; state.list={};
+    state.done={}; state.star={}; state.bingo={}; state.list={}; state.text={}; state.wx={};
     save(); init(); return;
   }
+});
+document.addEventListener("input", function(e){
+  var t=e.target;
+  if (t.hasAttribute && t.hasAttribute("data-text")){ state.text[t.getAttribute("data-text")]=t.value; save(); }
 });
 document.addEventListener("change", function(e){
   var t=e.target;
@@ -698,6 +744,7 @@ function init(){
   renderTabs(); renderDay(); updateOverall();
   $("beforeView").innerHTML = listHtml("Before we go","Tick each one as it is sorted.",BEFORE,"b");
   $("packView").innerHTML = listHtml("Packing list","Dec weather swings from cool in Shenzhen to snow indoors. Pack layers.",PACK,"p");
+  $("transportView").innerHTML = listHtml("Transport collector","Tick each one the first time you use it.",TRANSPORT,"t");
   setView(state.view||"days");
 }
 init();
